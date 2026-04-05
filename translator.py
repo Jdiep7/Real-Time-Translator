@@ -1,0 +1,56 @@
+import sounddevice as sd
+from scipy.io.wavfile import write
+import whisper
+from transformers import MarianMTModel, MarianTokenizer
+
+# ---------------------------
+# 1. Load models (only once)
+# ---------------------------
+print("Loading models...")
+whisper_model = whisper.load_model("base")
+
+model_name = "Helsinki-NLP/opus-mt-en-fr"  # Change language here
+tokenizer = MarianTokenizer.from_pretrained(model_name)
+translator_model = MarianMTModel.from_pretrained(model_name)
+
+# ---------------------------
+# 2. Record audio
+# ---------------------------
+def record_audio(filename="input.wav", duration=5, fs=16000):
+    print("🎤 Recording...")
+    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+    sd.wait()
+    write(filename, fs, audio)
+    print("✅ Recording complete")
+
+# ---------------------------
+# 3. Speech → Text
+# ---------------------------
+def transcribe(audio_file):
+    print("🧠 Transcribing...")
+    result = whisper_model.transcribe(audio_file)
+    return result["text"]
+
+# ---------------------------
+# 4. Translate
+# ---------------------------
+def translate(text):
+    print("🌍 Translating...")
+    inputs = tokenizer(text, return_tensors="pt", padding=True)
+    outputs = translator_model.generate(**inputs)
+    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+
+# ---------------------------
+# 5. Run pipeline
+# ---------------------------
+def main():
+    record_audio()
+
+    speech_text = transcribe("input.wav")
+    print("\n📝 You said:", speech_text)
+
+    translated_text = translate(speech_text)
+    print("🌍 Translated:", translated_text)
+
+if __name__ == "__main__":
+    main()
