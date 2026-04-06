@@ -87,8 +87,8 @@ You will:
 ---
 
 ### 🔄 Phase 2: Real-Time Translation (Next Step)
-- [ ] Record audio in small chunks (1–2 seconds)  
-- [ ] Process continuously in a loop  
+- [x] Record audio in small chunks (1–2 seconds)  
+- [x] Process continuously in a loop  
 - [ ] Reduce latency (faster Whisper model)  
 - [ ] Smooth output (combine partial sentences)  
 
