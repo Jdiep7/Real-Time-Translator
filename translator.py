@@ -1,6 +1,7 @@
 import sounddevice as sd
 from scipy.io.wavfile import write
 import whisper
+import re
 from transformers import MarianMTModel, MarianTokenizer
 
 # ---------------------------
@@ -42,9 +43,18 @@ def transcribe(audio_file):
 # ---------------------------
 def translate(text):
     print("🌍 Translating...")
-    inputs = tokenizer(text, return_tensors="pt", padding=True)
-    outputs = translator_model.generate(**inputs)
-    return tokenizer.decode(outputs[0], skip_special_tokens=True)
+    sentences = re.split(r'(?<=[.!?]) +', text)
+
+    translated_sentences = []
+
+    for sentence in sentences:
+        if sentence.strip():
+            inputs = tokenizer(sentence, return_tensors="pt", padding=True)
+            outputs = translator_model.generate(**inputs)
+            translated = tokenizer.decode(outputs[0], skip_special_tokens=True)
+            translated_sentences.append(translated)
+
+    return " ".join(translated_sentences)
 
 # ---------------------------
 # 5. Run pipeline
