@@ -16,12 +16,18 @@ translator_model = MarianMTModel.from_pretrained(model_name)
 # ---------------------------
 # 2. Record audio
 # ---------------------------
+import numpy as np
+
+
 def record_audio(filename="input.wav", duration=5, fs=16000):
-    print("🎤 Recording...")
-    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1)
+    print("🎤 Recording... Speak now!")
+
+    audio = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
     sd.wait()
+
     write(filename, fs, audio)
-    print("✅ Recording complete")
+
+    print("✅ Done recording")
 
 # ---------------------------
 # 3. Speech → Text
