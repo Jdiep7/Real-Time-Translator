@@ -2,11 +2,10 @@ import sounddevice as sd
 from scipy.io.wavfile import write
 import whisper
 import re
+import time
 from transformers import MarianMTModel, MarianTokenizer
+import numpy as np
 
-# ---------------------------
-# 1. Load models (only once)
-# ---------------------------
 print("Loading models...")
 whisper_model = whisper.load_model("base")
 
@@ -15,36 +14,25 @@ tokenizer = MarianTokenizer.from_pretrained(model_name)
 translator_model = MarianMTModel.from_pretrained(model_name)
 
 # ---------------------------
-# 2. Record audio
+# Record small chunk
 # ---------------------------
-import numpy as np
-
-
-def record_audio(filename="input.wav", duration=5, fs=16000):
-    print("🎤 Recording... Speak now!")
-
+def record_chunk(filename="input.wav", duration=2, fs=16000):
     audio = sd.rec(int(duration * fs), samplerate=fs, channels=1, dtype='int16')
     sd.wait()
-
     write(filename, fs, audio)
 
-    print("✅ Done recording")
-
 # ---------------------------
-# 3. Speech → Text
+# Transcribe
 # ---------------------------
 def transcribe(audio_file):
-    print("🧠 Transcribing...")
     result = whisper_model.transcribe(audio_file)
-    return result["text"]
+    return result["text"].strip()
 
 # ---------------------------
 # 4. Translate
 # ---------------------------
 def translate(text):
-    print("🌍 Translating...")
     sentences = re.split(r'(?<=[.!?]) +', text)
-
     translated_sentences = []
 
     for sentence in sentences:
@@ -60,13 +48,26 @@ def translate(text):
 # 5. Run pipeline
 # ---------------------------
 def main():
-    record_audio()
-
-    speech_text = transcribe("input.wav")
-    print("\n📝 You said:", speech_text)
-
-    translated_text = translate(speech_text)
-    print("🌍 Translated:", translated_text)
+    print("\n🎧 Real-time translator started (Ctrl+C to stop)\n")
+    
+    while True:
+        try:
+            record_chunk()
+            speech_text = transcribe("input.wav")
+        
+            if speech_text:
+                print("\n📝 You said:", speech_text)
+                translated_text = translate(speech_text)
+                print("🌍 Translated:", translated_text)
+                print("-" * 50)
+            
+            time.sleep(0.2)
+        
+        except KeyboardInterrupt:
+            print("\n🛑 Stopped")
+            break
+                
+    
 
 if __name__ == "__main__":
     main()
